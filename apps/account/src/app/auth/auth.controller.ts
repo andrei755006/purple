@@ -1,18 +1,24 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Logger } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { Message, RMQMessage, RMQRoute, RMQValidate } from 'nestjs-rmq';
 import { AccountLogin, AccountRegister } from '@purple/contracts';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-  @Post('register')
+  @RMQValidate()
+  @RMQRoute(AccountRegister.topic)
   async register(
-    @Body() dto: AccountRegister.Request
+    dto: AccountRegister.Request, @RMQMessage msg: Message
   ): Promise<AccountRegister.Response> {
+    const rid = msg.properties.headers['requestId'];
+    const logger = new Logger(rid);
+    logger.error('sdfsdf')
     return this.authService.register(dto);
   }
 
-  @Post('login')
+  @RMQValidate()
+  @RMQRoute(AccountLogin.topic)
   async login(
     @Body() { email, password }: AccountLogin.Request
   ): Promise<AccountLogin.Response> {
